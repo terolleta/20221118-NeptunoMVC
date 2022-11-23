@@ -1,0 +1,94 @@
+﻿
+@{
+    ViewData["Title"] = "Ficha de producto";
+}
+
+<div class="row">
+    <div class="col-md-4">
+        <!--imagen-->
+        @Html.Raw(ViewData["imagen"])
+        <hr/>
+        <!--categoria-->
+        <h2>
+            @ViewData["categoria"]
+        </h2>
+    </div>
+    <div class="col-md-8">
+        <!--nombre prod-->
+        <h1>
+            @ViewData["nombreProducto"]
+        </h1>
+        <!--precio-->
+        <h2>
+            @ViewData["precio"]
+        </h2>
+        <!--descripcion-->
+        <h3>
+            @ViewData["descripcion"]
+        </h3>
+        <!--stock con tres opciones: bajo<10, medio hasta 20, alto-->
+        @Html.Raw(ViewData["stock"])
+        <!--ventas-->
+        <p><b>Ventas: </b>@ViewData["ventas"]</p>
+        <!--historial-->
+        <input type="button" class="btn btn-primary" id="btnHistorial" value="Historial de ventas" onclick="getHistorial();" />
+
+        <hr/>
+                  
+    </div>
+</div>
+<div class="row">
+    <div class="col">
+        <div id="capahistorial" style="width:100%; background-color:gainsboro; display:none;">
+            <h4>Historial de ventas</h4>
+            <div id="contenidoHistorial" style="width:100%; text-align:center;">
+
+
+            </div>
+
+        </div>  
+
+    </div>
+</div>
+
+<script>
+    function getHistorial()
+    {       
+        if ($("#capahistorial").css("display")=="none")
+        {
+            //Si està oculat, hay que mostrarla
+            $("#capahistorial").css("display","block");
+
+            //Desactivar botón
+            $("#btnHistorial").attr("disabled",true);
+
+            //Mostrar waiting
+            $("#contenidoHistorial").html("<img src='/Images/loading.gif' width='50' />");
+
+            //Ajax para calcular la tabla de històrico
+            //Ajax nativo javascript (por si no hubiera jquery, lo qual es absurdo porque lo necessitas para el boostrap i muchas otras cosas)
+            //Creacion de este objeto que es capaz de connectar hacia el servidor y recibir una respuesta (implementa funcionamiento ajax con onload)
+            const xhttp = new XMLHttpRequest();
+            xhttp.onload = function() 
+            {
+                //Actualización UI via this.responseText
+                document.getElementById("contenidoHistorial").innerHTML = this.responseText;
+                //$("#contenidoHistorial").html(this.responseText);
+
+                //Activar botón de nuevo
+                document.getElementById("btnHistorial").disabled=false;
+                
+            }
+            xhttp.open("GET", "/Products/GetHistorico?productId=@ViewData["ProductId"]", true);
+            xhttp.send();
+
+
+        }
+        else
+        {
+            //Hay que ocultarla
+            $("#capahistorial").css("display","none");
+        }
+    }
+</script>
+

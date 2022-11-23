@@ -1,0 +1,198 @@
+﻿@using _20221118_NeptunoMVC.Dal
+@using System.IO
+@{
+    ViewData["Title"] = "Productos";
+    //mostraremos imagen, nombre, categoria, precio, stock, activo
+}
+
+<div class="row">
+    <div class="col" style="text-align:center;margin-bottom:20px">
+        <h1>@ViewData["Title"]</h1>
+    </div>
+</div>
+
+<!-- Panel de filtrado -->
+<div class="row" style="margin-bottom:20px;">
+    <div class="col text-center">
+        Categorias:  @Html.Raw(ViewData["cmbCategorias"])
+        Texto: @Html.Raw(ViewData["txtTexto"])
+        <input type="button" class="btn btn-primary" value="Buscar" onclick="search();" />
+    </div>
+</div>
+
+<div class="row">
+    <div class="col">
+        <div class="table-responsive">
+
+            <! ––« Cabezera de la tabla «––>
+            <table class="table table-bordered table-striped">
+            <tr>
+                <th>Imagen</th>
+                <th>Nombre</th>
+                <th>Categoria</th>
+                <th>Precio</th>
+                <th>Stock</th>
+                <th>Activo</th>
+                <th>Opciones</th> 
+
+            </tr>
+                @{
+                    foreach (var item in (List<ProductSlim>)ViewData["Products"])
+                    {
+                        string imagen = "";
+                        string nombreImagen = item.ProductId + "lr.jpg";
+                        string nombreImagenHR = item.ProductId + "hr.jpg";
+                        string path = (string)AppDomain.CurrentDomain.GetData("WebRootPath") + "wwwroot\\Images\\Products\\" + nombreImagen;                                                    
+                        if (File.Exists(path))
+                        {
+                            imagen = "<a href='/Images/Products/" + nombreImagenHR + "' " +
+                                        "data-lightbox='image-" + item.ProductId + "' " + 
+                                        "data-title='" + item.ProductName +"'>" +
+                                        "<img src='/Images/Products/" + nombreImagen + "' height = '75'/>" +
+                                    "</a>";
+                        }
+
+                        //Formateado de datos
+                        string strprice = ((decimal)item.Price).ToString("N2");
+                        string StrState = (item.State) ? "Activo" : "Innactivo";
+                        StrState = "<a href='javascript:void(0);' onclick='changeState("+item.ProductId+");'>" +
+                                    StrState + "</a>";
+
+                        <tr>
+                            <td>
+                                @Html.Raw(imagen)
+                            </td>
+                            <td>
+                                <a href="/Products/Detail?ProductId=@item.ProductId">
+                                    @item.ProductName
+                                </a>
+                            </td> 
+                            <td>@item.CategoryName</td>
+                            <td>@strprice</td>
+                            <td>@item.Stock</td>
+                            <td id="state_@item.ProductId">@Html.Raw(StrState)</td>
+                            <td>
+                                <a href="/Products/Detail?ProductId=@item.ProductId">
+                                     <i class="fa fa-product-hunt" aria-hidden="true" title="ficha producto"></i>
+                                </a>
+                                <a href="javascript:void(0);" onclick="getSupplier(@item.ProductId);" data-toggle="modal" data-target="#modSupplier">
+                                    <i class="fa fa-user-plus" aria-hidden="true" title="ficha proveedor"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    }
+            }
+
+            </table>
+            </div>
+        
+        </div>
+    </div>
+
+<!-- Botones de vuelta a categorias -->
+<div class="row">
+    <div class="col text-center">
+        <input type="button" class="btn btn-primary" value="Back to Categorias" 
+            onclick="backCategories();" />
+
+        <a href="/Categories/Index" class="btn  btn-primary" role ="button">Back to Categories</a> 
+        
+    </div>
+</div>
+
+<!-- Modal para proveedores -->
+<div class="modal" id="modSupplier" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header"">
+        <h5 class="modal-title">Ficha proveedor</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body text-center" id="fichaProveedor" >
+        <p>Info del proveedor</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+    function backCategories()
+    {
+        //tendria sentido hacer esto si aquí hubiera algo importante en js
+        location.href="/Categories/Index";
+    }
+
+    function changeState(productId)
+    {
+        //Poner waiting
+        var content =$("#state_" + productId).html();
+        $("#state_" + productId).html("<img src='/Images/loading.gif' width='32' />")
+
+        $.ajax
+        (
+            {
+                url:"/Products/ChangeState",
+                data: {productId:productId},
+                type: "GET",
+                success: function (resp)
+                {
+                    //Update UI
+                    strState = "<a href='javascript:void(0);' onclick='changeState("+productId+");'>" +
+                                    resp + "</a>";
+                    $("#state_" + productId).html(strState);
+                    alert("State update");
+                },
+                error: function()
+                {
+                    alert("Se ha producido un error");
+                    $("#state_" + productId).html(content);
+                }
+            }
+        )       
+    }
+
+    function search()
+    {
+        //Recoger parámetros del buscador
+        //Recargar página con parámetros
+        var categoryId = $("#cmbCategorias").val();
+        var texto = $("#txtSearch").val();
+
+        location.href="/Products/Index?CategoryId="+categoryId+"&search="+texto;
+    }
+
+    function getSupplier(productId)
+    {
+        //Meter el timmer, desactivar el botón....
+        $("#fichaProveedor").html("<img src='/Images/loading.gif' width='32' />")
+        //Ajax par controlador
+        //devolvemos un html estupendo
+        //lo metemos en id=fichaProveedor
+
+        $.ajax
+        (
+            {
+                url:"/Products/GetSupplier",
+                data: {productId:productId},
+                type: "GET",
+                success: function (resp)
+                {
+                    //Update UI
+                    fichaProveedor = resp;
+                    $("#fichaProveedor").removeClass("text-center");
+                    $("#fichaProveedor").html(fichaProveedor);                    
+                },
+                error: function()
+                {
+                    alert("Se ha producido un error"); 
+                }
+            }
+        )       
+
+    }
+</script>

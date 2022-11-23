@@ -1,0 +1,55 @@
+﻿
+@{
+    ViewData["Title"] = "Top 5";
+}
+
+
+<div class="row">
+    <div class="col-md-6" style="width:100%">
+        <h1>@ViewData["Title"]</h1>
+        <div>
+            <canvas id="myChart"></canvas>
+        </div>
+    </div>
+    <div class="col-md-6">
+        Lorem ipsum xD Blablabla...
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    window.onresize = function() 
+    {
+        location.reload();
+    }
+</script>
+
+
+<script>
+  const ctx = document.getElementById('myChart');
+
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: @Html.Raw(ViewData["Empleados"]),
+      datasets: [{
+        label: 'Ventas mejores vendedores',
+        data: @Html.Raw(ViewData["Amounts"]),
+        borderWidth: 1
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
+</script>
+
+
+
+
